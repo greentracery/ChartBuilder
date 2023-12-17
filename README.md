@@ -216,11 +216,19 @@ Simple module for building charts &amp; diagrams, based on matplotlib library
     
 ```
 
+### Map prepared from image (square):
+
 ![Prepared Map File (Square)](result/prepared_square_map.png)
+
+### Tracking on the map:
 
 ![Tracking On Map](result/10_square_map.svg)
 
+### Map prepared from image (rectangular):
+
 ![Prepared Map File (Rectangular)](result/prepared_rectangular_map.png)
+
+### Tracking on the map:
 
 ![Tracking On Map](result/11_rectangular_map.svg)
 
