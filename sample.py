@@ -1,5 +1,6 @@
+# Usage of ChartBuilder module:
 
-from chartbuilder import Scatter, Pie, Bar, LineGraph, Hist, ChartDataHelper as CDH
+from chartbuilder.chartbuilder import Scatter, Pie, Bar, LineGraph, Hist, ChartDataHelper as CDH
 
 import random
 

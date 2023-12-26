@@ -24,14 +24,52 @@
 # )
 
 from typing import List, Union
+from abc import ABC, abstractmethod
 import random
+import os
 from matplotlib import pyplot as plt
 from matplotlib import colors as mcolors
 from matplotlib.lines import Line2D
 from PIL import Image, ImageOps
-import os
 
-class ChartBuilder():
+class ChartBuilder(ABC): #Prohibits the creation of the class object directly
+    """ 
+        Abstract class for ChartBuilder, prototype of all avalaible chart types
+        
+        property: title: title (or supertitle) for diagramm (all diagramms in one image)
+        property: xlabel: name of x-axis
+        property: ylabel: name of y-axis
+        property: filename: name of image file to save diagramm
+        property: imgbackground: name of image file used as background image
+        property: facecolor: font color (base or CSS4) for all image
+        property: facecolor_alpha: opacity for all image, default 1.0
+        property: bgcolor: background color (base or CSS4) for diagramm figure 
+        property: bgcolor_alpha: opacity for diagramm figure background color, default 1.0
+        property: fontcolor: font color (base or CSS4) for title (supertitle), x-axis, y-axis, default 'black'
+        property: grid: enable or disable grid lines, default True
+        property: ticks: enable or disable ticks on x-axis & y-axis, default True
+        property: custom_x_ticks: custom sign for ticks on x-axis, default None
+        property: dpi: resolution, default 90
+        property: width: image width, defalt 800
+        property: height: image height, default 600
+        
+        method: setTitle(title): set title property
+        method: setXLabel(xlabel): set xlabel property
+        method: setYLabel(ylabel): set ylabel property
+        method: setSize(width, height): set width & height properties
+        method: fileToSave(filename): set filename property
+        method: EnableGrid(): set grid property to True
+        method: DisableGrid(): set grid property to False
+        method: HideTicks(): set ticks property to False
+        method: setFaceColor(facecolor, alpha): set facecolor & facecolor_alpha properties
+        method: setBgColor(bgcolor, alpha): set bgcolor & bgcolor_alpha properties
+        method: setBgImage(filename): set imgbackground property
+        method: showbgimage(minmax, aspect): read background image file & apply it as background of diagramm
+        method: setFontColor(color): set fontcolor property
+        method: getMarkersList(): return avalaible markers
+        method: getColorsList(): return avalaible colors
+        method: is_sequence(object): return is the object an instance of set, list, tuple or dictionary
+    """
     
     title: Union[str, None]
     xlabel: Union[str, None]
@@ -64,6 +102,13 @@ class ChartBuilder():
     __markers = [*Line2D.markers.keys()]
     
     def __init__(self, title = None, xlabel = None, ylabel = None):
+        """
+            Creates an instance of an object 
+            
+            :param title: title (or supertitle) for diagramm (all diagramms in one image)
+            :param xlabel: name of x-axis
+            :param ylabel: name of y-axis
+        """
         self.title = title
         self.xlabel = xlabel
         self.ylabel = ylabel
@@ -71,7 +116,7 @@ class ChartBuilder():
     def setTitle(self, title = None):
         self.title = title
     
-    def setXLabel(self, xlabel = None, ylabel = None):
+    def setXLabel(self, xlabel = None):
         self.xlabel = xlabel
     
     def setYLabel(self, ylabel = None):
@@ -117,7 +162,13 @@ class ChartBuilder():
     def setBgImage(self, filename: str):
         self.imgbackground = filename
         
-    def __showbgimage__(self, minmax: Union[tuple, None] = None, aspect = 'auto'):
+    def showbgimage(self, minmax: Union[tuple, None] = None, aspect = 'auto'):
+        """
+            This method read background image file & apply it as background of diagramm
+            
+            :param minmax: set of image corners (min_X, max_X, min_Y, max_Y) 
+            :param aspect: 'auto' | 'equal'
+        """
         try:
             img = plt.imread(self.imgbackground)
             if minmax is not None:
@@ -139,18 +190,29 @@ class ChartBuilder():
             self.fontcolor = fontcolor
             
     def getMarkersList(self):
-        return self.__markers #returns avalaible markers
+        """ Return avalaible markers """
+        return self.__markers
         
     def getColorsList(self):
-        return self.__colors #returns avalaible colors
+        """ Return avalaible colors """
+        return self.__colors
     
-    def __is_sequence__(self, obj):
+    def is_sequence(self, obj):
         t = type(obj)
         return hasattr(t, '__len__') and hasattr(t, '__getitem__')
         
+    @abstractmethod
+    def Plot(self):
+        pass
+        
 class Scatter(ChartBuilder):
-
+    """ 
+        ChartBuilder implementation for Scatter diagramm 
+        
+        method: Plot(*data): biuld diagramm and show it (or save into the file)
+    """
     class ScatterData():
+        """ This class describe data structure for Scatter diagramm """
         dataset: list ## [(x1,y1),(x2,y2),...]
         label: Union[str, None]
         color: str
@@ -160,6 +222,14 @@ class Scatter(ChartBuilder):
         __markers = [*Line2D.markers.keys()]
     
         def __init__(self, dataset: Union[list, tuple] , label = None, color = None, marker = None):
+            """ 
+                Creates an instance of an object ScatterData 
+                
+                :param dataset: Source data sequence
+                :param label: name of dataset
+                :param color: color for this dataset
+                :param marker: type of marker
+            """
             self.dataset = list(dataset)
             self.label = label
             if color is None or color not in (self.__colors):
@@ -170,6 +240,11 @@ class Scatter(ChartBuilder):
             self.marker = marker
     
     def Plot(self, *data: ScatterData):
+        """
+            This method biuld diagramm and show it (or save into the file)
+            
+            :param *data: one or more sets of source data
+        """
         legend = False
         
         fig = plt.figure(dpi = self.dpi, figsize = (self.width / self.dpi, self.height / self.dpi) )
@@ -187,8 +262,8 @@ class Scatter(ChartBuilder):
         for item in data:
             if isinstance(item, self.ScatterData):
                 if item.dataset is not None:
-                    x = [value[0] for value in item.dataset if self.__is_sequence__(value) and len(value) == 2]
-                    y = [value[1] for value in item.dataset if self.__is_sequence__(value) and len(value) == 2]
+                    x = [value[0] for value in item.dataset if self.is_sequence(value) and len(value) == 2]
+                    y = [value[1] for value in item.dataset if self.is_sequence(value) and len(value) == 2]
                 if item.label is not None:
                     ax.scatter(x, y, label=item.label, color=item.color, marker=item.marker)
                     legend = True
@@ -199,7 +274,7 @@ class Scatter(ChartBuilder):
         min_Y, max_Y = plt.ylim()
         
         if hasattr(self, 'imgbackground') and self.imgbackground is not None:
-            self.__showbgimage__( (min_X, max_X, min_Y, max_Y) )
+            self.showbgimage( (min_X, max_X, min_Y, max_Y) )
         
         if self.title is not None:
             plt.title(self.title, color = self.fontcolor)
@@ -228,8 +303,13 @@ class Scatter(ChartBuilder):
             plt.show()
 
 class LineGraph(ChartBuilder):
+    """ 
+        ChartBuilder implementation for LineGraph diagramm 
         
+        method: Plot(*data): biuld diagramm and show it (or save into the file)
+    """
     class LineData():
+        """ This class describe data structure for LineGraph diagramm """
         dataset: list ## [(x1,y1),(x2,y2),...]
         label: Union[str, None]
         color: str
@@ -237,6 +317,13 @@ class LineGraph(ChartBuilder):
         __colors = [*mcolors.BASE_COLORS.keys(), *mcolors.CSS4_COLORS.keys()]
     
         def __init__(self, dataset: Union[list, tuple] , label = None, color = None):
+            """ 
+                Creates an instance of an object LineData
+                
+                :param dataset: Source data sequence
+                :param label: name of dataset
+                :param color: color for this dataset
+            """
             self.dataset = ChartDataHelper.data_sort_by_x(list(dataset))
             self.label = label
             if color is None or color not in (self.__colors):
@@ -244,6 +331,11 @@ class LineGraph(ChartBuilder):
             self.color = color
         
     def Plot(self, *data: LineData):
+        """
+            This method biuld diagramm and show it (or save into the file)
+            
+            :param *data: one or more sets of source data
+        """
         legend = False
         
         fig = plt.figure(dpi = self.dpi, figsize = (self.width / self.dpi, self.height / self.dpi) )
@@ -261,8 +353,8 @@ class LineGraph(ChartBuilder):
         for item in data:
             if isinstance(item, self.LineData):
                 if item.dataset is not None:
-                    x = [value[0] for value in item.dataset if self.__is_sequence__(value) and len(value) == 2]
-                    y = [value[1] for value in item.dataset if self.__is_sequence__(value) and len(value) == 2]
+                    x = [value[0] for value in item.dataset if self.is_sequence(value) and len(value) == 2]
+                    y = [value[1] for value in item.dataset if self.is_sequence(value) and len(value) == 2]
                 if item.label is not None:
                     ax.plot(x, y, label=item.label, color=item.color)
                     legend = True
@@ -273,7 +365,7 @@ class LineGraph(ChartBuilder):
         min_Y, max_Y = plt.ylim()
         
         if hasattr(self, 'imgbackground') and self.imgbackground is not None:
-            self.__showbgimage__( (min_X, max_X, min_Y, max_Y) )
+            self.showbgimage( (min_X, max_X, min_Y, max_Y) )
             
         if self.title is not None:
             plt.title(self.title, color = self.fontcolor)
@@ -302,8 +394,13 @@ class LineGraph(ChartBuilder):
             plt.show()
 
 class Hist(ChartBuilder):
-    
+    """ 
+        ChartBuilder implementation for Histogramm 
+        
+        method: Plot(*data): biuld diagramm and show it (or save into the file)
+    """
     class HistData():
+        """ This class describe data structure for Histogramm """
         values: list
         step: int
         hist_title: Union[str, None]
@@ -312,6 +409,14 @@ class Hist(ChartBuilder):
         __colors = [*mcolors.BASE_COLORS.keys(), *mcolors.CSS4_COLORS.keys()]
         
         def __init__(self, dataset: Union[list, tuple], step: int = 10, hist_title = None, color = None):
+            """ 
+                Creates an instance of an object HistData 
+                
+                :param dataset: Source data sequence
+                :param step: step for histogramm bins
+                :param hist_title: title of diagramm
+                :param color: color for this dataset
+            """
             self.values = list(dataset)
             self.step = step
             self.hist_title = hist_title
@@ -320,6 +425,11 @@ class Hist(ChartBuilder):
             self.color = color
             
     def Plot(self, *data: HistData):
+        """
+            This method biuld diagramm and show it (or save into the file)
+            
+            :param *data: one or more sets of source data
+        """
         legend = False
         
         diag_cnt = 0
@@ -351,7 +461,7 @@ class Hist(ChartBuilder):
                 min_Y, max_Y = plt.ylim()
                         
                 if hasattr(self, 'imgbackground') and self.imgbackground is not None:
-                    self.__showbgimage__( (min_X, max_X, min_Y, max_Y) )
+                    self.showbgimage( (min_X, max_X, min_Y, max_Y) )
                 
                 if self.grid:
                     ax.grid(True)
@@ -383,8 +493,13 @@ class Hist(ChartBuilder):
             plt.show()
 
 class Bar(ChartBuilder):
-    
+    """ 
+        ChartBuilder implementation for Bar diagramm 
+        
+        method: Plot(*data): biuld diagramm and show it (or save into the file)
+    """
     class BarData():
+        """ This class describe data structure for Bar diagramm """
         x_values: list
         y_values: list
         bar_title: Union[str, None]
@@ -393,6 +508,13 @@ class Bar(ChartBuilder):
         __colors = [*mcolors.BASE_COLORS.keys(), *mcolors.CSS4_COLORS.keys()]
         
         def __init__(self, dataset: Union[list, tuple], bar_title = None, color = None):
+            """ 
+                Creates an instance of an object BarData 
+                
+                :param dataset: Source data sequence
+                :param bar_title: title of diagramm
+                :param color: color for this dataset 
+            """
             dataset = ChartDataHelper.data_sort_by_x(list(dataset))
             x_values, y_values = [], []
             for item in dataset:
@@ -406,6 +528,11 @@ class Bar(ChartBuilder):
             self.color = color
             
     def Plot(self, *data: BarData):
+        """
+            This method biuld diagramm and show it (or save into the file)
+            
+            :param *data: one or more sets of source data
+        """
         legend = False
         
         diag_cnt = 0
@@ -434,7 +561,7 @@ class Bar(ChartBuilder):
                 min_Y, max_Y = plt.ylim()
                         
                 if hasattr(self, 'imgbackground') and self.imgbackground is not None:
-                    self.__showbgimage__( (min_X, max_X, min_Y, max_Y) )
+                    self.showbgimage( (min_X, max_X, min_Y, max_Y) )
                 
                 if self.grid:
                     plt.grid(True)
@@ -471,17 +598,32 @@ class Bar(ChartBuilder):
             plt.show()
 
 class Pie(ChartBuilder):
-    
+    """ 
+        ChartBuilder implementation for Pie diagramm 
+        
+        property: custom_item_names: cutmom names for diagramm items (pie sectors)
+        
+        method: Plot(*data): biuld diagramm and show it (or save into the file)
+        method: setItemNames(item_names): set property custom_item_names
+    """
     custom_x_ticks = None
     custom_item_names: Union[list, None] = None
     
     class PieData():
+        """ This class describe data structure for Pie diagramm """
         values: list
         labels: list
         minvalue: float
         pie_title: Union[str, None]
         
         def __init__(self, dataset: Union[list, tuple], pie_title = None, minpercent: int = 0):
+            """ 
+                Creates an instance of an object PieData 
+                
+                :param dataset: Source data sequence
+                :param pie_title: Title of diagramm
+                :param minpersent: minimum value (in %) below which verities will be discarded
+            """
             dataset = ChartDataHelper.data_sort_by_x(list(dataset))
             values, labels = [], []
             for item in dataset:
@@ -495,22 +637,35 @@ class Pie(ChartBuilder):
             self.pie_title = pie_title
     
     def setXTicks(self, x_ticks: list):
+        """ Override an inherited method setXTicks """
         pass
     
     def EnableGrid(self):
+        """ Override an inherited method EnableGrid """
         pass
     
     def DisableGrid(self):
+        """ Override an inherited method DisableGrid """
         pass
         
     def HideTicks(self):
+        """ Override an inherited method HideTicks """
         pass
     
     def setItemNames(self, item_names: list):
+        """
+            This method set property custom_item_names
+            
+            :param item_names: list of custom item names
+        """
         self.custom_item_names = item_names
     
     def Plot(self, *data: PieData):
-        
+        """
+            This method biuld diagramm and show it (or save into the file)
+            
+            :param *data: one or more sets of source data
+        """
         diag_cnt = 0
         for item in data:
             if isinstance(item, self.PieData):
@@ -547,7 +702,7 @@ class Pie(ChartBuilder):
                 min_Y, max_Y = plt.ylim()
                 
                 if hasattr(self, 'imgbackground') and self.imgbackground is not None:
-                    self.__showbgimage__( (min_X, max_X, min_Y, max_Y), 'equal' )
+                    self.showbgimage( (min_X, max_X, min_Y, max_Y), 'equal' )
                 
                 if item.pie_title is not None:
                     plt.title(item.pie_title, color = self.fontcolor)
@@ -563,29 +718,45 @@ class Pie(ChartBuilder):
             plt.show()
 
 class ChartDataHelper():
-    
+    """ This class contains auxiliary methods for data preprocessing """
     @staticmethod
     def data_count(src_data: list):
-        # input: 
-        #   src_data: list or tuple of source data, [x1,x2,...]
-        # returns set of tuple(s): {(item, count(item)),...}
+        """
+            This method counts the number of repetitions for each element of the original sequence
+            
+            :param src_data: Original sequence (list or tuple)
+            :return: The sequence of tuples, contains (element, count of element)
+        """
         return set([(item, src_data.count(item)) for item in src_data])
         
     @staticmethod
     def data_sort_by_x(x_y_data: list):
-        # input: x_y_data: list or tuple(s) of x & y data,  [(x,y),...]
+        """
+            This method sort sequence of lists (or tuples) by first item of each list (tuple)
+            
+            :param x_y_data: Original sequence (list or tuple of lists|tuples)
+            :return: Sorted sequence
+        """
         return sorted(x_y_data, key=lambda v: v[0])
     
     @staticmethod
     def data_sort_by_y(x_y_data: list):
-        # input: x_y_data: list or tuple(s) of x & y data,  [(x,y),...]
+        """
+            This method sort sequence of lists (or tuples) by second item of each list (tuple)
+            
+            :param x_y_data: Original sequence (list or tuple of lists|tuples)
+            :return: Sorted sequence
+        """
         return sorted(x_y_data, key=lambda v: v[1])
     
     @staticmethod
     def data_percentage(counted_data: list):
-        # input: 
-        #   counted_data: list of tuple(s), [(item1, count(item1)), (item2, count(item2),...)] - source_data prepared with data_prepare_count()
-        # returns list of tuple(s) with percents: [(item, item_percent),...]
+        """
+            This method count of items in sequence to percentage.
+            
+            :param counted_data: The sequence of tuples, contains (element, count_of_element)
+            :return: The sequence of tuples, contains (element, item_percentage)
+        """
         counted_data = list(counted_data)
         total_summ = sum([val[1] for val in counted_data])
         for i in range(len(counted_data)):
@@ -596,9 +767,14 @@ class ChartDataHelper():
     
     @staticmethod
     def data_to_ranges(src_data: list, step: int = 10):
-        # input: 
-        #   list or tuple(s) of source data, [x1,x2,...]
-        #   step: int
+        """
+            This method forms ranges with a given step from the source data.
+            Used for naming of x-axis in bar diagramm or for naming in pie diagramm
+            
+            :param src_data: Original sequence (list, set or tuple)
+            :param step: Step for forming bins borders
+            :return: Sequence of ranges (list of tuples contains values [(start_of_bin, end_of_bin),...]
+        """
         max_value = max(src_data)
         min_value = min(src_data)
         bins = [i for i in range(min_value-1, max_value+step, step)]
@@ -607,6 +783,12 @@ class ChartDataHelper():
     
     @staticmethod
     def map_prepare(mapfile: str):
+        """
+            This method prepare map file for using as tracking (scatter) background
+            
+            :param mapfile: filename of image with map
+            :return: filename of prepared map, map width, map height, map corners
+        """
         ## Prepare map: add borders = (width|height) / 20:
         axis_margin_ratio = 20 ## Yep, it's a magic (magic of matplotlib)
         im = Image.open(mapfile)
@@ -628,5 +810,15 @@ class ChartDataHelper():
 
     @staticmethod
     def data_crop(src_data: list, min_x, min_y, max_x, max_y):
+        """
+            This method excludes elements outside a range from a sequence
+            
+            :param src_data: Original sequence (list or tuple of lists|tuples)
+            :param min_x: lower limit of the range 
+            :param min_y: lower limit of the range
+            :param max_x: upper range limit
+            :param max_y: upper range limit
+            :return: Filtered sequence
+        """
         out_data = [item for item in src_data if item[0] > min_x and item[0] < max_x and item[1] > min_y and item[1] < max_y]
         return out_data

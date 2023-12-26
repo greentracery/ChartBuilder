@@ -3,10 +3,18 @@ Simple module for building charts &amp; diagrams, based on matplotlib library
 
 ## Requirements:
 
+    - Python >= 3.5
+
     - matplotlib
     
     - pillow
+
+### Preparing:
     
+    - Install package: pip install dist/ChartBuilder-*version*.tar.gz
+    
+    - Or copy required files manually in your project folder & install requirements
+
 ## Usage:
 
 ```python
@@ -234,5 +242,5 @@ Simple module for building charts &amp; diagrams, based on matplotlib library
 
 ## Samples
 
-Sample datasets and ChartBuilder usage see in test.py
+Sample datasets and ChartBuilder usage see also in [sample.py](https://github.com/greentracery/ChartBuilder/blob/main/sample.py)
 
