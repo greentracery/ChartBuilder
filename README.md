@@ -19,7 +19,7 @@ Simple module for building charts &amp; diagrams, based on matplotlib library
 
 ```python
     
-    from chartbuilder import Scatter, Pie, Bar, LineGraph, Hist, ChartDataHelper as CDH
+    from chartbuilder.chartbuilder import Scatter, Pie, Bar, LineGraph, Hist, ChartDataHelper as CDH
     
 ```
 
