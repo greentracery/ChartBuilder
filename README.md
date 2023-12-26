@@ -11,7 +11,7 @@ Simple module for building charts &amp; diagrams, based on matplotlib library
 
 ### Preparing:
     
-    - Install package: pip install dist/ChartBuilder-*version*.tar.gz
+    - Install package: pip install dist/ChartBuilder-[version].tar.gz
     
     - Or copy required files manually in your project folder & install requirements
 
