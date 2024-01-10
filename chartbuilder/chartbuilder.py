@@ -791,6 +791,9 @@ class ChartDataHelper():
         """
         ## Prepare map: add borders = (width|height) / 20:
         axis_margin_ratio = 20 ## Yep, it's a magic (magic of matplotlib)
+        abs_mapfile_path = os.path.abspath(mapfile)
+        fname = os.path.basename(abs_mapfile_path)
+        abs_folder = abs_mapfile_path.replace(fname, '')
         im = Image.open(mapfile)
         (width, height) = im.size
         img = ImageOps.expand(im, border=int(max(width, height)/axis_margin_ratio), fill='#ffffff')
@@ -802,7 +805,7 @@ class ChartDataHelper():
             (new_height - (new_height - int(height + 2*(height/axis_margin_ratio)))//2 ), # bottom right y
         )
         img2 = img.crop(crops)
-        mapfile = f"img/prepared_map_{width}_{height}.jpg"
+        mapfile = f"{abs_folder}prepared_map_{width}_{height}.jpg"
         img2.save(mapfile, quality = 80)
         corner_points = [(0,0),(0,height),(width,0),(width, height)]
         
